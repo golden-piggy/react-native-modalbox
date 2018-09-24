@@ -129,9 +129,9 @@ var ModalBox = createReactClass({
   },
 
   componentWillReceiveProps: function(props) {
-     if(this.props.isOpen != props.isOpen){
-        this.handleOpenning(props);
-     }
+    if(this.props.isOpen != props.isOpen){
+      this.handleOpenning(props);
+    }
   },
 
   handleOpenning: function(props) {
@@ -278,7 +278,7 @@ var ModalBox = createReactClass({
   /*
    * Close animation for the modal, will move down
    */
-  animateClose: function() {
+  animateClose: function(closedBy) {
     this.stopAnimateOpen();
 
     // Backdrop fadeout
@@ -303,7 +303,7 @@ var ModalBox = createReactClass({
           isAnimateClose: false,
           animClose
         });
-        if (this.props.onClosed) this.props.onClosed();
+        if (this.props.onClosed) this.props.onClosed(closedBy);
       });
     });
   },
@@ -424,7 +424,7 @@ var ModalBox = createReactClass({
 
     if (this.props.backdrop) {
       backdrop = (
-        <TouchableWithoutFeedback onPress={this.props.backdropPressToClose ? this.close : null}>
+        <TouchableWithoutFeedback onPress={this.props.backdropPressToClose ? this.closeByBackdrop : null}>
           <Animated.View importantForAccessibility="no" style={[styles.absolute, {opacity: this.state.backdropOpacity}]}>
             <View style={[styles.absolute, {backgroundColor:this.props.backdropColor, opacity: this.props.backdropOpacity}]}/>
             {this.props.backdropContent || []}
@@ -445,7 +445,7 @@ var ModalBox = createReactClass({
         onLayout={this.onViewLayout}
         style={[styles.wrapper, size, this.props.style, {transform: [{translateY: this.state.position}, {translateX: offsetX}]} ]}
         {...this.state.pan.panHandlers}>
-        {this.props.backdropPressToClose && <TouchableWithoutFeedback onPress={this.close}><View style={[styles.absolute]} /></TouchableWithoutFeedback>}
+        {this.props.backdropPressToClose && <TouchableWithoutFeedback onPress={this.closeByBackdrop}><View style={[styles.absolute]} /></TouchableWithoutFeedback>}
         {this.props.children}
       </Animated.View>
     )
@@ -455,7 +455,7 @@ var ModalBox = createReactClass({
    * Render the component
    */
   render: function() {
-    
+
     var visible = this.state.isOpen || this.state.isAnimateOpen || this.state.isAnimateClose;
 
     if (!visible) return <View/>
@@ -469,7 +469,7 @@ var ModalBox = createReactClass({
       </View>
     )
 
-if (!this.props.coverScreen) return content;
+    if (!this.props.coverScreen) return content;
 
     return (
       <Modal
@@ -501,15 +501,17 @@ if (!this.props.coverScreen) return content;
     }
   },
 
-  close: function() {
+  close: function(closedBy) {
     if (this.props.isDisabled) return;
     if (!this.state.isAnimateClose && (this.state.isOpen || this.state.isAnimateOpen)) {
-      this.animateClose();
+      this.animateClose(closedBy);
       if(this.props.backButtonClose && Platform.OS === 'android') BackButton.removeEventListener('hardwareBackPress', this.onBackPress)
     }
+  },
+
+  closeByBackdrop: function() {
+    this.close('backdrop')
   }
-
-
 });
 
 module.exports = ModalBox;
